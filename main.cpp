@@ -139,7 +139,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             packet[counter++] = (u_char) ip4; // ip
 
             packet[counter++] = 0x02; // if subtype: ifIndex
-            BYTE * pbyte = (BYTE *) &(pAdapterInfo->Index);
+            BYTE *pbyte = (BYTE *) &(pAdapterInfo->Index);
             packet[counter++] = pbyte[3]; // id
             packet[counter++] = pbyte[2]; // id
             packet[counter++] = pbyte[1]; // id
@@ -222,11 +222,12 @@ void iterate_devs(std::string hostname, std::string osname) {
 
 int main() {
     std::map<std::string, std::string> info = wmic();
-    cout << info["CSName"] << endl;
-    cout << info["Caption"] << endl;
-    cout << info["RegisteredUser"] << endl;
+    cout << "Hostname: " << info["CSName"] << endl;
+    cout << "Username: " << info["RegisteredUser"] << endl;
+    cout << "OS: " << info["Caption"] << endl;
 
     while (true) {
+        cout << endl << "Searching adapters..." << endl;
         iterate_devs(info["CSName"], info["Caption"]);
         sleep(1);
     }
