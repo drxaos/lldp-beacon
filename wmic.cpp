@@ -1,15 +1,4 @@
-#include <iostream>
-#include <string>
-#include <stdio.h>
-#include <algorithm>
-#include <functional>
-#include <cctype>
-#include <locale>
-#include <regex>
-#include <set>
-#include <map>
-
-using namespace std;
+#include "head.h"
 
 // trim from start (in place)
 static inline void ltrim(std::string &s) {
@@ -67,7 +56,6 @@ std::vector<std::string> &split(const std::string &s, char delim, std::vector<st
     return elems;
 }
 
-
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
     split(s, delim, elems);
@@ -75,9 +63,13 @@ std::vector<std::string> split(const std::string &s, char delim) {
 }
 
 std::map<std::string, std::string> wmic() {
+    dbg << "Exec WMIC";
     std::string sysinfo = exec("wmic os get Caption,CSName,RegisteredUser /value");
     trim(sysinfo);
 
+    dbg << "WMIC:" << endl << sysinfo;
+
+    dbg << "Parsing WMIC";
     std::map<std::string, std::string> info;
     for (const std::string &tag : split(sysinfo, '\n')) {
         auto key_val = split(tag, '=');

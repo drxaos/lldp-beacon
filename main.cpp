@@ -1,12 +1,4 @@
-#include <windef.h>
-#include <Windows.h>
-#include <iptypes.h>
-#include <ipifcons.h>
-#include <Iphlpapi.h>
-#include <unistd.h>
-
-#include "wmic.cpp"
-#include "pcap.h"
+#include "head.h"
 
 // Function prototypes
 void sendtodev(pcap_if_t *d);
@@ -16,20 +8,27 @@ char *iptos(u_long in);
 void iterate_devs(std::string hostname, std::string osname) {
     IP_ADAPTER_INFO AdapterInfo[32];       // Allocate information for up to 32 NICs
     DWORD dwBufLen = sizeof(AdapterInfo);  // Save memory size of buffer
+    dbg << "List adapters";
     DWORD dwStatus = GetAdaptersInfo(      // Call GetAdapterInfo
             AdapterInfo,                 // [out] buffer to receive data
             &dwBufLen);                  // [in] size of receive data buffer
 
     //No network card? Other error?
-    if (dwStatus != ERROR_SUCCESS)
+    if (dwStatus != ERROR_SUCCESS) {
+        dbg << "No network card? Other error?";
         return;
+    }
 
     PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
     while (pAdapterInfo) {
+        dbg << "Next adapter: " << pAdapterInfo->Description;
         IP_ADDRESS_STRING ipaddress = pAdapterInfo->IpAddressList.IpAddress;
-        if (&ipaddress == nullptr || strlen(ipaddress.String) < 7) {
+        if (&ipaddress == nullptr || strlen(ipaddress.String) < 7 || strcmp(ipaddress.String, "0.0.0.0") == 0) {
+            dbg << "Incorrect IP: " << ipaddress.String;
+            pAdapterInfo = pAdapterInfo->Next;
             continue;
         }
+        dbg << "Parsing IP: " << ipaddress.String;
         int ip1, ip2, ip3, ip4;
         char dot;
         istringstream s(ipaddress.String);  // input stream that now contains the ip address string
@@ -43,6 +42,7 @@ void iterate_devs(std::string hostname, std::string osname) {
         string rpcap = "rpcap://\\Device\\NPF_";
         rpcap.append(pAdapterInfo->AdapterName);
 
+        dbg << "Open pcap: " << rpcap;
         if ((fp = pcap_open(rpcap.c_str(),
                             100,                // portion of the packet to capture (only the first 100 bytes)
                             PCAP_OPENFLAG_NOCAPTURE_RPCAP,
@@ -50,9 +50,9 @@ void iterate_devs(std::string hostname, std::string osname) {
                             NULL,               // authentication on the remote machine
                             errbuf              // error buffer
         )) == NULL) {
-            fprintf(stderr, "\nUnable to open the adapter. %s is not supported by WinPcap\n", rpcap.c_str());
+            dbg << "Unable to open the adapter. " << rpcap.c_str() << " is not supported by WinPcap";
         } else {
-            cout << "Sending to: " << rpcap << endl;
+            dbg << "Building packet";
 
             // LLDP_MULTICAST
             packet[0] = 0x01;
@@ -63,6 +63,16 @@ void iterate_devs(std::string hostname, std::string osname) {
             packet[5] = 0x0e;
 
             // SRC MAC
+            dbg << "Building packet: SRC MAC: " << hex
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[0] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[1] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[2] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[3] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[4] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[5] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[6]
+            << dec << setw(1);
+
             packet[6] = pAdapterInfo->Address[0];
             packet[7] = pAdapterInfo->Address[1];
             packet[8] = pAdapterInfo->Address[2];
@@ -77,6 +87,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             int counter = 14;
 
             // CHASSIS SUBTYPE
+            dbg << "Building packet: CHASSIS SUBTYPE: " << hostname;
             packet[counter++] = 0x02; // chassis id
             packet[counter++] = (u_char) (hostname.length() + 1);
             packet[counter++] = 0x07; // locally assigned
@@ -85,6 +96,16 @@ void iterate_devs(std::string hostname, std::string osname) {
             }
 
             // PORT SUBTYPE
+            dbg << "Building packet: PORT SUBTYPE: " << hex
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[0] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[1] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[2] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[3] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[4] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[5] << ":"
+            << setfill('0') << setw(2) << (int) pAdapterInfo->Address[6]
+            << dec << setw(1);
+
             packet[counter++] = 0x04; // port id
             packet[counter++] = 0x07; // size 1+6
             packet[counter++] = 0x03; // type = mac address
@@ -99,6 +120,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             packet[counter++] = 120;
 
             // Port description
+            dbg << "Building packet: Port Desc: " << pAdapterInfo->Description;
             packet[counter++] = 0x08; // Port Description
             int descLen = strlen(pAdapterInfo->Description);
             packet[counter++] = (u_char) descLen; // Description length
@@ -107,6 +129,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             }
 
             // System name
+            dbg << "Building packet: Sys Name: " << hostname;
             packet[counter++] = 0x0a; // System name
             packet[counter++] = (u_char) hostname.length(); // Name length
             for (int j = 0; j < hostname.length(); ++j) {
@@ -114,6 +137,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             }
 
             // System description
+            dbg << "Building packet: Sys Desc: " << osname;
             packet[counter++] = 0x0c; // System desc
             packet[counter++] = (u_char) osname.length(); // Name length
             for (int j = 0; j < osname.length(); ++j) {
@@ -138,6 +162,7 @@ void iterate_devs(std::string hostname, std::string osname) {
             packet[counter++] = (u_char) ip3; // ip
             packet[counter++] = (u_char) ip4; // ip
 
+            dbg << "Building packet: if subtype: ifIndex: " << pAdapterInfo->Index;
             packet[counter++] = 0x02; // if subtype: ifIndex
             BYTE *pbyte = (BYTE *) &(pAdapterInfo->Index);
             packet[counter++] = pbyte[3]; // id
@@ -210,10 +235,12 @@ void iterate_devs(std::string hostname, std::string osname) {
             packet[counter++] = 0x00; // len 0
 
             /* Send down the packet */
+            dbg << "Sending packet (size: " << counter << ")";
             if (pcap_sendpacket(fp, packet, counter /* size */) != 0) {
                 fprintf(stderr, "\nError sending the packet: \n", pcap_geterr(fp));
             }
 
+            dbg << "Closing pcap";
             pcap_close(fp);
         }
         pAdapterInfo = pAdapterInfo->Next;
@@ -221,13 +248,17 @@ void iterate_devs(std::string hostname, std::string osname) {
 }
 
 int main() {
-    std::map<std::string, std::string> info = wmic();
-    cout << "Hostname: " << info["CSName"] << endl;
-    cout << "Username: " << info["RegisteredUser"] << endl;
-    cout << "OS: " << info["Caption"] << endl;
 
+    dbg << "Initializing...";
+
+    std::map<std::string, std::string> info = wmic();
+    dbg << "Hostname: " << info["CSName"];
+    dbg << "Username: " << info["RegisteredUser"];
+    dbg << "OS: " << info["Caption"];
+
+    dbg << "Main loop";
     while (true) {
-        cout << endl << "Searching adapters..." << endl;
+        dbg << "Searching adapters...";
         iterate_devs(info["CSName"], info["Caption"]);
         sleep(1);
     }
