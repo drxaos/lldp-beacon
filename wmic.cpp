@@ -69,6 +69,12 @@ std::map<std::string, std::string> wmic() {
 
     dbg << "WMIC:" << endl << sysinfo;
 
+    if (sysinfo.find("Caption", 0) == string::npos ||
+        sysinfo.find("CSName", 0) == string::npos) {
+        dbg << "Invalid WMIC. Exiting";
+        exit(1);
+    }
+
     dbg << "Parsing WMIC";
     std::map<std::string, std::string> info;
     for (const std::string &tag : split(sysinfo, '\n')) {

@@ -26,6 +26,7 @@ using namespace std;
 std::map<std::string, std::string> wmic();
 
 basic_ostream<char> *_dbg(const char *func, int line);
+void _dbg_cfg(bool enabled);
 
 #define dbg (*_dbg(__FUNCTION__, __LINE__))
 

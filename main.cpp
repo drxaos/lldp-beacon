@@ -15,7 +15,7 @@ void iterate_devs(std::string hostname, std::string osname) {
 
     //No network card? Other error?
     if (dwStatus != ERROR_SUCCESS) {
-        dbg << "No network card? Other error?";
+        dbg << "Unknown error (No network card?)";
         return;
     }
 
@@ -247,20 +247,51 @@ void iterate_devs(std::string hostname, std::string osname) {
     }
 }
 
-int main() {
+int main(int argc, char *argv[]) {
 
-    dbg << "Initializing...";
+    string hostname;
+    string osname;
 
-    std::map<std::string, std::string> info = wmic();
-    dbg << "Hostname: " << info["CSName"];
-    dbg << "Username: " << info["RegisteredUser"];
-    dbg << "OS: " << info["Caption"];
+    for (int i = 0; i < argc; ++i) {
+        std::string s(argv[i]);
+        if (s.find("-d") == 0) {
+            _dbg_cfg(true);
+            dbg << "Debug logging enabled";
+        }
+    }
+    for (int i = 0; i < argc; ++i) {
+        std::string s(argv[i]);
+        if (s.find("-h") == 0) {
+            hostname = s;
+            dbg << "Set hostname = " << hostname;
+        }
+    }
+    for (int i = 0; i < argc; ++i) {
+        std::string s(argv[i]);
+        if (s.find("-s") == 0) {
+            osname = s;
+            dbg << "Set systemname = " << hostname;
+        }
+    }
 
-    dbg << "Main loop";
+    if (hostname.empty() || osname.empty()) {
+        std::map<std::string, std::string> info;
+        info = wmic();
+        if (hostname.empty()) {
+            hostname = info["CSName"];
+        }
+        if (osname.empty()) {
+            osname = info["Caption"];
+        }
+    }
+
+    dbg << "Hostname: " << hostname;
+    dbg << "OS name: " << osname;
+
     while (true) {
         dbg << "Searching adapters...";
-        iterate_devs(info["CSName"], info["Caption"]);
-        sleep(1);
+        iterate_devs(hostname, osname);
+        sleep(30);
     }
 
     return 0;
