@@ -35,7 +35,14 @@ lldp-beacon -d -h <host name> -s <system name>
 * ```-h <host name>``` - use this hostname; if not present - hostname will be taken from wmic
 * ```-s <system name>``` - use this OS name; if not present - OS name will be taken from wmic
 
-## Install as service
+LLDP packets are sent to all interfaces every 30 seconds
+
+![wireshark](https://github.com/drxaos/lldp-beacon/blob/master/doc/wireshark.png)
+
+![debug](https://github.com/drxaos/lldp-beacon/blob/master/doc/debug.png)
+
+
+## Install as windows service (not implemented yet)
 Copy lldp-beacon.exe to a new directory (e.g. C:\Program Files\lldp-beacon).
 
 Run command:
