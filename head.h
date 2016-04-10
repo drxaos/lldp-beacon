@@ -23,9 +23,10 @@
 
 using namespace std;
 
-std::map<std::string, std::string> wmic();
+map<string, string> wmic(string alias);
 
 basic_ostream<char> *_dbg(const char *func, int line);
+
 void _dbg_cfg(bool enabled);
 
 #define dbg (*_dbg(__FUNCTION__, __LINE__))

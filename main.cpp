@@ -5,10 +5,12 @@ void sendtodev(pcap_if_t *d);
 
 char *iptos(u_long in);
 
-void iterate_devs(std::string hostname, std::string osname) {
+map<int, string> ptrcache;
+
+void lldp(std::string hostname, std::string osname) {
     IP_ADAPTER_INFO AdapterInfo[32];       // Allocate information for up to 32 NICs
     DWORD dwBufLen = sizeof(AdapterInfo);  // Save memory size of buffer
-    dbg << "List adapters";
+    dbg << "Searching adapters";
     DWORD dwStatus = GetAdaptersInfo(      // Call GetAdapterInfo
             AdapterInfo,                 // [out] buffer to receive data
             &dwBufLen);                  // [in] size of receive data buffer
@@ -18,6 +20,8 @@ void iterate_devs(std::string hostname, std::string osname) {
         dbg << "Unknown error (No network card?)";
         return;
     }
+
+    int sentCount = 0;
 
     PIP_ADAPTER_INFO pAdapterInfo = AdapterInfo;
     while (pAdapterInfo) {
@@ -33,6 +37,18 @@ void iterate_devs(std::string hostname, std::string osname) {
         char dot;
         istringstream s(ipaddress.String);  // input stream that now contains the ip address string
         s >> ip1 >> dot >> ip2 >> dot >> ip3 >> dot >> ip4 >> dot;
+
+        string dnsdomain = ptrcache[pAdapterInfo->Index];
+        if (dnsdomain.empty()) {
+            dbg << "Searching dns name for " << ipaddress.String;
+            map<string, string> info = wmic(string("nicconfig WHERE InterfaceIndex=") + to_string(pAdapterInfo->Index));
+            dnsdomain = info["DNSDomain"];
+            if (dnsdomain.empty()) {
+                dbg << "DNS name not found, using hostname";
+                dnsdomain = hostname;
+            }
+            ptrcache[pAdapterInfo->Index] = dnsdomain;
+        }
 
         pcap_t *fp;
         char errbuf[PCAP_ERRBUF_SIZE];
@@ -87,12 +103,12 @@ void iterate_devs(std::string hostname, std::string osname) {
             int counter = 14;
 
             // CHASSIS SUBTYPE
-            dbg << "Building packet: CHASSIS SUBTYPE: " << hostname;
+            dbg << "Building packet: CHASSIS SUBTYPE: " << dnsdomain;
             packet[counter++] = 0x02; // chassis id
-            packet[counter++] = (u_char) (hostname.length() + 1);
+            packet[counter++] = (u_char) (dnsdomain.length() + 1);
             packet[counter++] = 0x07; // locally assigned
-            for (int j = 0; j < hostname.length(); ++j) {
-                packet[counter++] = (u_char) hostname.c_str()[j];
+            for (int j = 0; j < dnsdomain.length(); ++j) {
+                packet[counter++] = (u_char) dnsdomain.c_str()[j];
             }
 
             // PORT SUBTYPE
@@ -129,11 +145,11 @@ void iterate_devs(std::string hostname, std::string osname) {
             }
 
             // System name
-            dbg << "Building packet: Sys Name: " << hostname;
+            dbg << "Building packet: Sys Name: " << dnsdomain;
             packet[counter++] = 0x0a; // System name
-            packet[counter++] = (u_char) hostname.length(); // Name length
-            for (int j = 0; j < hostname.length(); ++j) {
-                packet[counter++] = (u_char) hostname.c_str()[j];
+            packet[counter++] = (u_char) dnsdomain.length(); // Name length
+            for (int j = 0; j < dnsdomain.length(); ++j) {
+                packet[counter++] = (u_char) dnsdomain.c_str()[j];
             }
 
             // System description
@@ -238,12 +254,27 @@ void iterate_devs(std::string hostname, std::string osname) {
             dbg << "Sending packet (size: " << counter << ")";
             if (pcap_sendpacket(fp, packet, counter /* size */) != 0) {
                 fprintf(stderr, "\nError sending the packet: \n", pcap_geterr(fp));
+            } else {
+                sentCount++;
             }
 
             dbg << "Closing pcap";
             pcap_close(fp);
         }
         pAdapterInfo = pAdapterInfo->Next;
+    }
+    if (sentCount > 0) {
+        dbg << "Successfully sent " << sentCount << " packets";
+    } else {
+        dbg << "Packets not sent!";
+    }
+}
+
+void wait(basic_ostream<char> *progress, int sec) {
+    *progress << "Sleeping " << sec << "sec";
+    for (int i = 0; i < sec; ++i) {
+        sleep(1);
+        *progress << ".";
     }
 }
 
@@ -276,12 +307,12 @@ int main(int argc, char *argv[]) {
 
     if (hostname.empty() || osname.empty()) {
         std::map<std::string, std::string> info;
-        info = wmic();
+        info = wmic("os");
         if (hostname.empty()) {
             hostname = info["CSName"];
         }
         if (osname.empty()) {
-            osname = info["Caption"];
+            osname = info["Caption"] + " " + info["OSArchitecture"] + " " + info["Version"];
         }
     }
 
@@ -289,9 +320,8 @@ int main(int argc, char *argv[]) {
     dbg << "OS name: " << osname;
 
     while (true) {
-        dbg << "Searching adapters...";
-        iterate_devs(hostname, osname);
-        sleep(30);
+        lldp(hostname, osname);
+        wait(&(dbg), 30);
     }
 
     return 0;

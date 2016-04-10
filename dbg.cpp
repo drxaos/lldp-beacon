@@ -21,7 +21,7 @@ basic_ostream<char> *_dbg(const char *func, int line) {
         strftime(buffer, 80, "%d-%m-%Y %I:%M:%S", timeinfo);
         std::string timeStr(buffer);
 
-        cout << endl << "[" << timeStr << "] " << func << "(" << line << "): ";
+        cout << endl << "[" << timeStr << "] " << func << ":" << line << " | ";
     }
     return &cout;
 }

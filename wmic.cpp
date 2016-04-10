@@ -1,37 +1,14 @@
 #include "head.h"
 
-// trim from start (in place)
-static inline void ltrim(std::string &s) {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), std::not1(std::ptr_fun<int, int>(std::isspace))));
-}
+std::string trim(const std::string &str, const std::string &whitespace = " \r\n\t") {
+    const auto strBegin = str.find_first_not_of(whitespace);
+    if (strBegin == std::string::npos)
+        return ""; // no content
 
-// trim from end (in place)
-static inline void rtrim(std::string &s) {
-    s.erase(std::find_if(s.rbegin(), s.rend(), std::not1(std::ptr_fun<int, int>(std::isspace))).base(), s.end());
-}
+    const auto strEnd = str.find_last_not_of(whitespace);
+    const auto strRange = strEnd - strBegin + 1;
 
-// trim from both ends (in place)
-static inline void trim(std::string &s) {
-    ltrim(s);
-    rtrim(s);
-}
-
-// trim from start (copying)
-static inline std::string ltrimmed(std::string s) {
-    ltrim(s);
-    return s;
-}
-
-// trim from end (copying)
-static inline std::string rtrimmed(std::string s) {
-    rtrim(s);
-    return s;
-}
-
-// trim from both ends (copying)
-static inline std::string trimmed(std::string s) {
-    trim(s);
-    return s;
+    return str.substr(strBegin, strRange);
 }
 
 std::string exec(const char *cmd) {
@@ -62,24 +39,19 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
-std::map<std::string, std::string> wmic() {
+map<string, string> wmic(string alias) {
     dbg << "Exec WMIC";
-    std::string sysinfo = exec("wmic os get Caption,CSName,RegisteredUser /value");
-    trim(sysinfo);
+    std::string sysinfo = trim(exec((string("wmic ") + string(alias) + string(" get /value")).c_str()));
 
     dbg << "WMIC:" << endl << sysinfo;
-
-    if (sysinfo.find("Caption", 0) == string::npos ||
-        sysinfo.find("CSName", 0) == string::npos) {
-        dbg << "Invalid WMIC. Exiting";
-        exit(1);
-    }
 
     dbg << "Parsing WMIC";
     std::map<std::string, std::string> info;
     for (const std::string &tag : split(sysinfo, '\n')) {
-        auto key_val = split(tag, '=');
-        info.insert(std::make_pair(trimmed(key_val[0]), trimmed(key_val[1])));
+        auto key_val = split(trim(tag), '=');
+        if (key_val.size() == 2) {
+            info.insert(std::make_pair(trim(key_val[0]), trim(key_val[1])));
+        }
     }
 
     return info;
