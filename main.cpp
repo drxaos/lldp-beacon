@@ -1,10 +1,5 @@
 #include "head.h"
 
-// Function prototypes
-void sendtodev(pcap_if_t *d);
-
-char *iptos(u_long in);
-
 map<int, string> ptrcache;
 
 void lldp(std::string hostname, std::string osname) {
