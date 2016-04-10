@@ -10,18 +10,22 @@ Simple LLDP beacon for win32/64 (no discovery)
 * CMake https://cmake.org/
 
 ## Build
+
 Download project:
 ```
 git clone https://github.com/drxaos/lldp-beacon.git
 ```
+
 Go to build folder:
 ```
 cd lldp-beacon/build
 ```
+
 Configure:
 ```
 cmake -G "MinGW Makefiles" ..
 ```
+
 Build .exe file:
 ```
 make
@@ -43,6 +47,7 @@ LLDP packets are sent to all interfaces every 30 seconds
 
 
 ## Install as windows service (not implemented yet)
+
 Copy lldp-beacon.exe to a new directory (e.g. C:\Program Files\lldp-beacon).
 
 Run command:
