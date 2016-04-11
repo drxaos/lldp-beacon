@@ -19,11 +19,13 @@
 #include <Iphlpapi.h>
 #include <unistd.h>
 
-#include "pcap.h"
+#include "dpcap.h"
 
 using namespace std;
 
 map<string, string> wmic(string alias);
+
+std::string exec(const char *cmd);
 
 basic_ostream<char> *_dbg(const char *func, int line);
 

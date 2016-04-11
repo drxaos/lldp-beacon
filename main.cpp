@@ -1,6 +1,11 @@
 #include "head.h"
 
 map<int, string> ptrcache;
+HINSTANCE dllHandle;
+dll_pcap_open pcap_open;
+dll_pcap_close pcap_close;
+dll_pcap_sendpacket pcap_sendpacket;
+dll_pcap_geterr pcap_geterr;
 
 void lldp(std::string hostname, std::string osname) {
     IP_ADAPTER_INFO AdapterInfo[32];       // Allocate information for up to 32 NICs
@@ -36,7 +41,8 @@ void lldp(std::string hostname, std::string osname) {
         string dnsdomain = ptrcache[pAdapterInfo->Index];
         if (dnsdomain.empty()) {
             dbg << "Searching dns name for " << ipaddress.String;
-            map<string, string> info = wmic(string("nicconfig WHERE InterfaceIndex=") + to_string(pAdapterInfo->Index));
+            map<string, string> info = wmic(
+                    string("nicconfig WHERE InterfaceIndex=") + to_string(pAdapterInfo->Index));
             dnsdomain = info["DNSDomain"];
             if (dnsdomain.empty()) {
                 dbg << "DNS name not found, using hostname";
@@ -273,7 +279,27 @@ void wait(basic_ostream<char> *progress, int sec) {
     }
 }
 
+void loadpcap() {
+    dllHandle = LoadLibrary("wpcap.dll");
+    if (!dllHandle) {
+        cerr << "Trying to install WinPcap.exe";
+        exec("winpcap.exe /S");
+        dllHandle = LoadLibrary("wpcap.dll");
+        if (!dllHandle) {
+            cerr << "Cannot install WinPcap";
+            exit(1);
+        }
+    }
+
+    pcap_open = (dll_pcap_open) GetProcAddress(dllHandle, "pcap_open");
+    pcap_close = (dll_pcap_close) GetProcAddress(dllHandle, "pcap_close");
+    pcap_sendpacket = (dll_pcap_sendpacket) GetProcAddress(dllHandle, "pcap_sendpacket");
+    pcap_geterr = (dll_pcap_geterr) GetProcAddress(dllHandle, "pcap_geterr");
+}
+
 int main(int argc, char *argv[]) {
+
+    loadpcap();
 
     string hostname;
     string osname;

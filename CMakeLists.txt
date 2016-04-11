@@ -1,4 +1,4 @@
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
 add_definitions(-DWPCAP -DHAVE_REMOTE)
 cmake_minimum_required(VERSION 3.5)
 
@@ -12,7 +12,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
 set(SOURCE_FILES main.cpp wmic.cpp dbg.cpp)
 add_executable(lldp_beacon ${SOURCE_FILES})
 
-find_library(WPCAPLIB wpcap)
-find_library(PACKETLIB packet)
+#find_library(WPCAPLIB wpcap)
+#find_library(PACKETLIB packet)
 find_library(IPHLPAPILIB iphlpapi)
-target_link_libraries(lldp_beacon ${WPCAPLIB} ${PACKETLIB} ${IPHLPAPILIB})
+target_link_libraries(lldp_beacon ${IPHLPAPILIB})
