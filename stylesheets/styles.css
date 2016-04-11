@@ -850,3 +850,9 @@ section #title .credits.right {
     display: none;
   }
 }
+
+@media print, screen and (max-width: 950px) {
+  .github-fork-ribbon {
+    display: none;
+  }
+}
