@@ -46,6 +46,7 @@ LLDP packets are sent to all interfaces every 30 seconds
 
 ![debug](https://github.com/drxaos/lldp-beacon/blob/master/doc/debug.png)
 
+![perf](https://github.com/drxaos/lldp-beacon/blob/master/doc/perf.png)
 
 ## Install as windows service
 
