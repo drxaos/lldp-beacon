@@ -42,11 +42,11 @@ lldp-beacon -h <host name> -s <system name>
 
 LLDP packets are sent to all interfaces every 30 seconds
 
-![wireshark](https://raw.githubusercontent.com/drxaos/lldp-beacon/blob/master/doc/wireshark.png)
+![wireshark](https://raw.githubusercontent.com/drxaos/lldp-beacon/master/doc/wireshark.png)
 
 ![debug](https://raw.githubusercontent.com/drxaos/lldp-beacon/master/doc/debug.png)
 
-![perf](https://raw.githubusercontent.com/drxaos/lldp-beacon/blob/master/doc/perf.png)
+![perf](https://raw.githubusercontent.com/drxaos/lldp-beacon/master/doc/perf.png)
 
 ## Install as windows service
 
