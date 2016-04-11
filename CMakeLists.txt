@@ -9,7 +9,7 @@ include_directories(${CMAKE_SOURCE_DIR}/WpdPack/Include)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -U__STRICT_ANSI__")
 set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
 
-set(SOURCE_FILES main.cpp wmic.cpp dbg.cpp)
+set(SOURCE_FILES main.cpp wmic.cpp dbg.cpp svc.cpp)
 add_executable(lldp_beacon ${SOURCE_FILES})
 
 #find_library(WPCAPLIB wpcap)

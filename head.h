@@ -18,6 +18,14 @@
 #include <ipifcons.h>
 #include <Iphlpapi.h>
 #include <unistd.h>
+#include <winsock.h>
+#include <wininet.h>
+#include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
 
 #include "dpcap.h"
 
@@ -26,6 +34,18 @@ using namespace std;
 map<string, string> wmic(string alias);
 
 std::string exec(const char *cmd);
+
+void loop(string hostname, string osname);
+
+void md_install_service();
+
+void md_service_control(DWORD dwControl);
+
+void md_service_main(DWORD argc, char **argv);
+
+void md_remove_service();
+
+void interrupt();
 
 basic_ostream<char> *_dbg(const char *func, int line);
 

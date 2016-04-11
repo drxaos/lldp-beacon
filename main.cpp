@@ -7,6 +7,8 @@ dll_pcap_close pcap_close;
 dll_pcap_sendpacket pcap_sendpacket;
 dll_pcap_geterr pcap_geterr;
 
+int run_loop = 1;
+
 void lldp(std::string hostname, std::string osname) {
     IP_ADAPTER_INFO AdapterInfo[32];       // Allocate information for up to 32 NICs
     DWORD dwBufLen = sizeof(AdapterInfo);  // Save memory size of buffer
@@ -265,7 +267,7 @@ void lldp(std::string hostname, std::string osname) {
         pAdapterInfo = pAdapterInfo->Next;
     }
     if (sentCount > 0) {
-        dbg << "Successfully sent " << sentCount << " packets";
+        dbg << "Successfully sent " << sentCount << " packet(s)";
     } else {
         dbg << "Packets not sent!";
     }
@@ -274,6 +276,10 @@ void lldp(std::string hostname, std::string osname) {
 void wait(basic_ostream<char> *progress, int sec) {
     *progress << "Sleeping " << sec << "sec";
     for (int i = 0; i < sec; ++i) {
+        if (!run_loop) {
+            dbg << "Exiting";
+            exit(0);
+        }
         sleep(1);
         *progress << ".";
     }
@@ -286,7 +292,7 @@ void loadpcap() {
         exec("winpcap.exe /S");
         dllHandle = LoadLibrary("wpcap.dll");
         if (!dllHandle) {
-            cerr << "Cannot install WinPcap";
+            cerr << "Please, install WinPcap!";
             exit(1);
         }
     }
@@ -297,34 +303,9 @@ void loadpcap() {
     pcap_geterr = (dll_pcap_geterr) GetProcAddress(dllHandle, "pcap_geterr");
 }
 
-int main(int argc, char *argv[]) {
+void loop(string hostname, string osname) {
 
     loadpcap();
-
-    string hostname;
-    string osname;
-
-    for (int i = 0; i < argc; ++i) {
-        std::string s(argv[i]);
-        if (s.find("-d") == 0) {
-            _dbg_cfg(true);
-            dbg << "Debug logging enabled";
-        }
-    }
-    for (int i = 0; i < argc; ++i) {
-        std::string s(argv[i]);
-        if (s.find("-h") == 0) {
-            hostname = s;
-            dbg << "Set hostname = " << hostname;
-        }
-    }
-    for (int i = 0; i < argc; ++i) {
-        std::string s(argv[i]);
-        if (s.find("-s") == 0) {
-            osname = s;
-            dbg << "Set systemname = " << hostname;
-        }
-    }
 
     if (hostname.empty() || osname.empty()) {
         std::map<std::string, std::string> info;
@@ -333,7 +314,7 @@ int main(int argc, char *argv[]) {
             hostname = info["CSName"];
         }
         if (osname.empty()) {
-            osname = info["Caption"] + " " + info["OSArchitecture"] + " " + info["Version"];
+            osname = info["Caption"] + " " + info["OSArchitecture"] + " " + info["Version"] + " " + info["CSDVersion"];
         }
     }
 
@@ -343,6 +324,64 @@ int main(int argc, char *argv[]) {
     while (true) {
         lldp(hostname, osname);
         wait(&(dbg), 30);
+    }
+}
+
+void interrupt() {
+    run_loop = 0;
+}
+
+int main(int argc, char *argv[]) {
+    int a = 0;
+    char *b;
+    int action = 0;
+
+    static SERVICE_TABLE_ENTRY Services[] = {
+            {(LPSTR) "LLDPBeacon", (LPSERVICE_MAIN_FUNCTION) md_service_main},
+            {0}
+    };
+    for (int i = 0; i < argc; ++i) {
+        std::string s(argv[i]);
+        if (s.find("install") == 0) {
+            cerr << "Installing service" << endl;
+            md_install_service();
+            exit(0);
+        }
+    }
+    for (int i = 0; i < argc; ++i) {
+        std::string s(argv[i]);
+        if (s.find("remove") == 0) {
+            cerr << "Removing service";
+            md_remove_service();
+            exit(0);
+        }
+    }
+
+    // trying to start as a service
+    if (!StartServiceCtrlDispatcher(Services)) {
+
+        string hostname;
+        string osname;
+
+        _dbg_cfg(true);
+        dbg << "Debug mode";
+
+        for (int i = 0; i < argc; ++i) {
+            std::string s(argv[i]);
+            if (s.find("-h") == 0) {
+                hostname = s;
+                dbg << "Set hostname = " << hostname;
+            }
+        }
+        for (int i = 0; i < argc; ++i) {
+            std::string s(argv[i]);
+            if (s.find("-s") == 0) {
+                osname = s;
+                dbg << "Set systemname = " << hostname;
+            }
+        }
+
+        loop(hostname, osname);
     }
 
     return 0;
