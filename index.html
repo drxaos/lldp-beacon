@@ -1,0 +1,137 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>LLDP beacon by drxaos</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/github-dark.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/main.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <header>
+        <h1>LLDP beacon</h1>
+        <p>Simple LLDP beacon for win32/64</p>
+      </header>
+
+      <div id="banner">
+        <span id="logo"></span>
+
+        <a href="https://github.com/drxaos/lldp-beacon" class="button fork"><strong>View On GitHub</strong></a>
+        <div class="downloads">
+          <span>Downloads:</span>
+          <ul>
+            <li><a href="https://github.com/drxaos/lldp-beacon/zipball/master" class="button">ZIP</a></li>
+            <li><a href="https://github.com/drxaos/lldp-beacon/tarball/master" class="button">TAR</a></li>
+          </ul>
+        </div>
+      </div><!-- end banner -->
+
+    <div class="wrapper">
+      <nav>
+        <ul></ul>
+      </nav>
+      <section>
+        <h1>
+<a id="lldp-beacon" class="anchor" href="#lldp-beacon" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>lldp-beacon</h1>
+
+<p>Simple LLDP beacon for win32/64 (no discovery)</p>
+
+<p><a href="https://en.wikipedia.org/wiki/Link_Layer_Discovery_Protocol">https://en.wikipedia.org/wiki/Link_Layer_Discovery_Protocol</a></p>
+
+<h2>
+<a id="requirements" class="anchor" href="#requirements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Requirements</h2>
+
+<ul>
+<li>WinPcap <a href="http://www.winpcap.org/">http://www.winpcap.org/</a>
+</li>
+<li>wmic + Running WMI Service</li>
+</ul>
+
+<h2>
+<a id="build-tools" class="anchor" href="#build-tools" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build tools</h2>
+
+<ul>
+<li>MinGW (gcc, g++, mingw32-make) <a href="http://www.mingw.org/">http://www.mingw.org/</a>
+</li>
+<li>CMake <a href="https://cmake.org/">https://cmake.org/</a>
+</li>
+</ul>
+
+<h2>
+<a id="build" class="anchor" href="#build" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Build</h2>
+
+<p>Download project:</p>
+
+<pre><code>git clone https://github.com/drxaos/lldp-beacon.git
+</code></pre>
+
+<p>Go to build folder:</p>
+
+<pre><code>cd lldp-beacon/build
+</code></pre>
+
+<p>Configure:</p>
+
+<pre><code>cmake -G "MinGW Makefiles" ..
+</code></pre>
+
+<p>Build .exe file:</p>
+
+<pre><code>make
+</code></pre>
+
+<h2>
+<a id="running" class="anchor" href="#running" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Running</h2>
+
+<pre><code>lldp-beacon -h &lt;host name&gt; -s &lt;system name&gt;
+</code></pre>
+
+<ul>
+<li>
+<code>-h &lt;host name&gt;</code> - use this hostname; if not present - hostname will be taken from wmic</li>
+<li>
+<code>-s &lt;system name&gt;</code> - use this OS name; if not present - OS name will be taken from wmic</li>
+</ul>
+
+<p>LLDP packets are sent to all interfaces every 30 seconds</p>
+
+<p><img src="https://github.com/drxaos/lldp-beacon/blob/master/doc/wireshark.png" alt="wireshark"></p>
+
+<p><img src="https://github.com/drxaos/lldp-beacon/blob/master/doc/debug.png" alt="debug"></p>
+
+<p><img src="https://github.com/drxaos/lldp-beacon/blob/master/doc/perf.png" alt="perf"></p>
+
+<h2>
+<a id="install-as-windows-service" class="anchor" href="#install-as-windows-service" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Install as windows service</h2>
+
+<p>Copy lldp-beacon.exe to a new directory (e.g. C:\Program Files\lldp-beacon).</p>
+
+<p>Run command:</p>
+
+<pre><code>lldp-beacon.exe install
+</code></pre>
+
+<p>Hostname and OS name will be taken from wmic</p>
+
+<p>To remove service run command:</p>
+
+<pre><code>lldp-beacon.exe remove
+</code></pre>
+      </section>
+      <footer>
+        <p>Project maintained by <a href="https://github.com/drxaos">drxaos</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://twitter.com/michigangraham">mattgraham</a></small></p>
+      </footer>
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
