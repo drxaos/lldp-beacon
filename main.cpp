@@ -364,7 +364,7 @@ int main(int argc, char *argv[]) {
         string osname;
 
         _dbg_cfg(true);
-        dbg << "Debug mode";
+        dbg << "Debug mode. See readme.txt for advanced use";
 
         for (int i = 0; i < argc; ++i) {
             std::string s(argv[i]);

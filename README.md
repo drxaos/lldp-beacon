@@ -35,9 +35,8 @@ make
 
 ## Running
 ```
-lldp-beacon -d -h <host name> -s <system name>
+lldp-beacon -h <host name> -s <system name>
 ```
-* ```-d``` - enable debug logging
 * ```-h <host name>``` - use this hostname; if not present - hostname will be taken from wmic
 * ```-s <system name>``` - use this OS name; if not present - OS name will be taken from wmic
 
@@ -48,13 +47,18 @@ LLDP packets are sent to all interfaces every 30 seconds
 ![debug](https://github.com/drxaos/lldp-beacon/blob/master/doc/debug.png)
 
 
-## Install as windows service (not implemented yet)
+## Install as windows service
 
 Copy lldp-beacon.exe to a new directory (e.g. C:\Program Files\lldp-beacon).
 
 Run command:
 ```
-lldp-beacon.exe --install
+lldp-beacon.exe install
 ```
 
 Hostname and OS name will be taken from wmic
+
+To remove service run command:
+```
+lldp-beacon.exe remove
+```
