@@ -40,17 +40,20 @@ void lldp(std::string hostname, std::string osname) {
         istringstream s(ipaddress.String);  // input stream that now contains the ip address string
         s >> ip1 >> dot >> ip2 >> dot >> ip3 >> dot >> ip4 >> dot;
 
-        string dnsdomain = ptrcache[pAdapterInfo->Index];
-        if (dnsdomain.empty()) {
+        string dnsname = ptrcache[pAdapterInfo->Index];
+        if (dnsname.empty()) {
             dbg << "Searching dns name for " << ipaddress.String;
             map<string, string> info = wmic(
                     string("nicconfig WHERE InterfaceIndex=") + to_string(pAdapterInfo->Index));
-            dnsdomain = info["DNSDomain"];
+            string dnshost = info["DNSHostName"];
+            string dnsdomain = info["DNSDomain"];
             if (dnsdomain.empty()) {
                 dbg << "DNS name not found, using hostname";
-                dnsdomain = hostname;
+                dnsname = hostname;
+            } else {
+                dnsname = dnshost + "." + dnsdomain;
             }
-            ptrcache[pAdapterInfo->Index] = dnsdomain;
+            ptrcache[pAdapterInfo->Index] = dnsname;
         }
 
         pcap_t *fp;
@@ -106,12 +109,12 @@ void lldp(std::string hostname, std::string osname) {
             int counter = 14;
 
             // CHASSIS SUBTYPE
-            dbg << "Building packet: CHASSIS SUBTYPE: " << dnsdomain;
+            dbg << "Building packet: CHASSIS SUBTYPE: " << dnsname;
             packet[counter++] = 0x02; // chassis id
-            packet[counter++] = (u_char) (dnsdomain.length() + 1);
+            packet[counter++] = (u_char) (dnsname.length() + 1);
             packet[counter++] = 0x07; // locally assigned
-            for (int j = 0; j < dnsdomain.length(); ++j) {
-                packet[counter++] = (u_char) dnsdomain.c_str()[j];
+            for (int j = 0; j < dnsname.length(); ++j) {
+                packet[counter++] = (u_char) dnsname.c_str()[j];
             }
 
             // PORT SUBTYPE
@@ -148,11 +151,11 @@ void lldp(std::string hostname, std::string osname) {
             }
 
             // System name
-            dbg << "Building packet: Sys Name: " << dnsdomain;
+            dbg << "Building packet: Sys Name: " << dnsname;
             packet[counter++] = 0x0a; // System name
-            packet[counter++] = (u_char) dnsdomain.length(); // Name length
-            for (int j = 0; j < dnsdomain.length(); ++j) {
-                packet[counter++] = (u_char) dnsdomain.c_str()[j];
+            packet[counter++] = (u_char) dnsname.length(); // Name length
+            for (int j = 0; j < dnsname.length(); ++j) {
+                packet[counter++] = (u_char) dnsname.c_str()[j];
             }
 
             // System description
