@@ -44,7 +44,7 @@ void lldp(std::string hostname, std::string osname) {
         if (dnsname.empty()) {
             dbg << "Searching dns name for " << ipaddress.String;
             map<string, string> info = wmic(
-                    string("nicconfig WHERE InterfaceIndex=") + to_string(pAdapterInfo->Index));
+                    string("nicconfig WHERE \"SettingID='") + string(pAdapterInfo->AdapterName) + "'\"");
             string dnshost = info["DNSHostName"];
             string dnsdomain = info["DNSDomain"];
             if (dnsdomain.empty()) {
