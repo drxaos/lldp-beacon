@@ -3,6 +3,8 @@ Simple LLDP beacon for win32/64 (no discovery)
 
 https://en.wikipedia.org/wiki/Link_Layer_Discovery_Protocol
 
+Another version with team interfaces support https://github.com/VictorPavlushin/SympleLldpAgent
+
 ## Requirements
 * WinPcap http://www.winpcap.org/
 * wmic + Running WMI Service
